@@ -1,0 +1,29 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558 
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "c++ build active file",
+            "command": "C:\\msys64\\mingw64\\bin\\g++.exe",
+            "args": [
+                "c:\\InOutPath\\OutdoorPath\\Queries/test.c",
+                "-o",
+                "${fileDirname}/test.dll",
+                "-I", "C:/Program Files/PostgreSQL/11/include/*",
+                "-I", "C:\\Program Files\\PostgreSQL\\11\\include\\server\\*",
+                "-I", "C:/Program Files/PostgreSQL/11/include/server/utils/*",
+                "-I", "C:/Program Files/PostgreSQL/11/include/server/port/win32/*",
+                "-I", "C:/Program Files/PostgreSQL/11/include/server/port/win32_msvc/*"
+            ],
+            "options": {
+                "cwd": "C:\\msys64\\mingw64\\bin"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+            ,"group": "build"
+        }
+    ]
+}

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ol3 pgRouting client</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/css/ol.css" type="text/css">
+    <style>
+      #ol-map {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+    <script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
+  </head>
+  <body>
+    <div id="ol-map">
+        <div id="start-point">start</div>
+        <div id="final-point">final</div>
+    </div>
+
+    <script>
+
+        var map = new ol.Map({
+            target: 'ol-map',
+            layers: [
+            new ol.layer.Tile({
+                source: new ol.source.OSM()
+            })
+            ],
+            view: new ol.View({
+            center: [14134888.1446, 4517672.9700],
+            zoom: 10
+            })
+        });
+
+        var params = {
+            LAYERS: 'pgrouting:pgrouting',
+            'TILED': true,
+            FROMAT: 'image/png'
+        };
+        var startPoint = new ol.Overlay({
+            map: map,
+            element: document.getElementById('start-point')
+        });
+        var finalPoint = new ol.Overlay({
+            map: map,
+            element: document.getElementById('final-point')
+        });
+
+        var transform = ol.proj.getTransform('EPSG:3857', 'EPSG:4326');
+
+        map.on('click', function(event) {
+            var coordinate = event.coordinate;
+            if (startPoint.getPosition() == undefined) {
+                // first click
+                startPoint.setPosition(coordinate);
+            } else if (finalPoint.getPosition() == undefined) {
+                // second click
+                finalPoint.setPosition(coordinate);
+
+                // transform the coordinates from the map projection (EPSG:3857)
+                // into the server projection (EPSG:4326)
+                var startCoord = transform(startPoint.getPosition());
+                var finalCoord = transform(finalPoint.getPosition());
+                var viewparams = [
+                'x1:' + startCoord[0], 'y1:' + startCoord[1],
+                'x2:' + finalCoord[0], 'y2:' + finalCoord[1]
+                ];
+                params.viewparams = viewparams.join(';');
+
+                // we now have the two points, create the result layer and add it to the map
+                result = new ol.layer.Image({
+                source: new ol.source.ImageWMS({
+                    url: 'http://localhost:8080/geoserver/pgrouting/wms',
+                    params: params,
+                    serverType: 'geoserver'
+                })
+                });
+                map.addLayer(result);
+                startPoint = new ol.Overlay({
+                    map: map,
+                    element: document.getElementById('start-point')
+                }); 
+                finalPoint = new ol.Overlay({
+                    map: map,
+                    element: document.getElementById('final-point')
+                });
+            }
+        });
+    </script>
+  </body>
+</html>
