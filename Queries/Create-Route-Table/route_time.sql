@@ -16,7 +16,7 @@ DECLARE
     last_time INTEGER;
     sect_dur INTEGER;
 BEGIN
-	FOR rec IN SELECT rd.route_desc_id, term, start_time, end_time FROM public.route_desc rd WHERE rd.route_desc_id = id
+	FOR rec IN SELECT rd.route_desc_id, term, start_time, end_time FROM public.route_desc rd LIMIT id
 	LOOP
 		route_desc_id := rec.route_desc_id;
         t := rec.start_time;
@@ -53,7 +53,11 @@ BEGIN
 
             seq := seq + 1;
             RETURN NEXT;
-            t := rec.start_time + seq * rec.term * 60;
+            IF rec.term = 0 THEN
+                t := rec.start_time + seq * 6 * 60;
+            ELSE
+                t := rec.start_time + seq * rec.term * 60;
+            END IF;
         END LOOP;	
 	END LOOP;
 	RETURN;
