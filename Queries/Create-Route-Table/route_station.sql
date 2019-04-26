@@ -30,3 +30,14 @@ INSERT INTO public.route_st(
     FROM public."BUS_STATION" BS
         JOIN public."route_desc" rd
         ON BS."busRouteId" = rd."route_desc_id"
+
+
+
+
+
+
+SELECT *
+FROM public."BUS_STATION" rs
+JOIN public.p_st pt
+ON rs."stationid" = pt.station_id
+WHERE pt.pseudo_id = 7779

@@ -30,6 +30,8 @@ BEGIN
     marked_stop_t := '{}';
     EXECUTE 'SELECT pseudo_id FROM public.p_st WHERE station_id = ' || start_station_id INTO rec;
     start_station_id := rec.pseudo_id;
+    EXECUTE 'SELECT pseudo_id FROM public.p_st WHERE station_id = ' || end_station_id INTO rec;
+    end_station_id := rec.pseudo_id;
     marked_stop := array_append(marked_stop, rec.pseudo_id); -- 시작 정류장 마킹
     -- 도착 시간 초기화
     dep_times := array_fill(900000, ARRAY[20000]);
