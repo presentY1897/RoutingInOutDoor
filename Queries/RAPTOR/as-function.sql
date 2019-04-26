@@ -29,10 +29,11 @@ DECLARE
 BEGIN
     marked_stop_t := '{}';
     EXECUTE 'SELECT pseudo_id FROM public.p_st WHERE station_id = ' || start_station_id INTO rec;
+    start_station_id := rec.pseudo_id;
     marked_stop := array_append(marked_stop, rec.pseudo_id); -- 시작 정류장 마킹
     -- 도착 시간 초기화
     dep_times := array_fill(900000, ARRAY[20000]);
-    deps := array_fill(create_trip(-1, -1, -1, -1, -1), ARRAY[20000]);
+    deps := array_fill(create_trip(-1, -1, -1, -1, 900000), ARRAY[20000]);
     dep_times[marked_stop[1]] := start_time; -- 첫 정류장 시작 시간 초기화
     deps[marked_stop[1]] := create_trip(-1, -1, marked_stop[1], -1, start_time); -- 첫 정류장 트립 초기화
 
@@ -51,7 +52,7 @@ BEGIN
                         JOIN public.route_desc rd
                         ON st.route_desc_id = rd.route_desc_id
                     WHERE station_id = (SELECT station_id FROM public.p_st WHERE pseudo_id = '
-                    || new_stop || ') AND rt.time_series[st.seq * 2 - 1] > ' || dep_times[new_stop]
+                    || new_stop || ') AND rt.time_series[st.seq * 2 - 1] > ' || deps[new_stop].arr_time
                     || ' ORDER BY rt.route_desc_id, rt.seq';
             FOR rec IN EXECUTE rec_sql
             LOOP
@@ -59,8 +60,9 @@ BEGIN
                 FOR seq IN seq..rec.maxseq - 1
                 LOOP
                     -- Q := array_append(Q, create_trip(rec.route_desc_id, new_stop, rec.p_st_ary[seq], rec.time_series[rec.rseq * 2], rec.time_series[seq * 2 - 1]));
-                    IF rec.time_series[seq * 2 - 1] < dep_times[rec.p_st_ary[seq]] THEN
-                        dep_times[rec.p_st_ary[seq]] := rec.time_series[seq * 2 - 1];
+                    -- IF rec.time_series[seq * 2 - 1] < dep_times[rec.p_st_ary[seq]] THEN
+                    IF rec.time_series[seq * 2 - 1] < deps[rec.p_st_ary[seq]].arr_time THEN
+                        --dep_times[rec.p_st_ary[seq]] := rec.time_series[seq * 2 - 1];
                         deps[rec.p_st_ary[seq]] := create_trip(rec.route_desc_id, new_stop, rec.p_st_ary[seq], rec.time_series[rec.rseq * 2], rec.time_series[seq * 2 - 1]);
                         marked_stop_t := array_remove(marked_stop_t, rec.p_st_ary[seq]);
                         marked_stop_t := array_append(marked_stop_t, rec.p_st_ary[seq]);
@@ -68,7 +70,23 @@ BEGIN
                 END LOOP;
             END LOOP;
         END LOOP;
+
         marked_stop := marked_stop_t;
+
+        FOREACH new_stop IN ARRAY marked_stop
+        LOOP
+            rec_sql := 'SELECT f_id, e_id, dist / 1.2 as dur FROM public.station_transfer WHERE f_id = '
+                    || new_stop;
+            FOR rec IN EXECUTE rec_sql
+            LOOP
+                IF deps[new_stop].arr_time + rec.dur < deps[rec.e_id].arr_time THEN
+                    --dep_times[rec.p_st_ary[seq]] := rec.time_series[seq * 2 - 1];
+                    deps[rec.e_id] := create_trip(-2, new_stop, rec.e_id, deps[rec.f_id].arr_time, CAST(deps[rec.f_id].arr_time + rec.dur as INTEGER));
+                    marked_stop_t := array_remove(marked_stop_t, rec.e_id);
+                    marked_stop_t := array_append(marked_stop_t, rec.e_id);
+                END IF;
+            END LOOP;
+        END LOOP;
         -- marked_stop := '{}';
         -- FOREACH rec IN ARRAY Q
         -- LOOP
@@ -79,23 +97,45 @@ BEGIN
         --         marked_stop := array_append(marked_stop, rec.arr_st);
         --     END IF;
         -- END LOOP;
+        marked_stop := marked_stop_t;
 
-        IF array_length(Q, 1) = 0 THEN
-            EXIT;
-        END IF;
+        -- IF array_length(marked_stop, 1) = 0 THEN
+        --     EXIT;
+        -- END IF;
     END LOOP;
 
-    FOREACH rec IN ARRAY deps
+    new_stop := end_station_id;
+    WHILE new_stop <> start_station_id 
     LOOP
-        route_desc_id := rec.route_desc_id;
+        route_desc_id := deps[new_stop].route_desc_id;
         route_seq := 0;
-        dep_st := rec.dep_st;
-        arr_st := rec.arr_st;
-        dep_time := rec.dep_time;
-        arr_time := rec.arr_time;
+        dep_st := deps[new_stop].dep_st;
+        arr_st := deps[new_stop].arr_st;
+        dep_time := deps[new_stop].dep_time;
+        arr_time := deps[new_stop].arr_time;
         path_seq := 0;
+        new_stop := deps[new_stop].dep_st;
         RETURN NEXT;
     END LOOP;
+    route_desc_id := deps[new_stop].route_desc_id;
+    route_seq := 0;
+    dep_st := deps[new_stop].dep_st;
+    arr_st := deps[new_stop].arr_st;
+    dep_time := deps[new_stop].dep_time;
+    arr_time := deps[new_stop].arr_time;
+    path_seq := 0;
+    new_stop := deps[new_stop].dep_st;
+    -- FOREACH rec IN ARRAY deps
+    -- LOOP
+    --     route_desc_id := rec.route_desc_id;
+    --     route_seq := 0;
+    --     dep_st := rec.dep_st;
+    --     arr_st := rec.arr_st;
+    --     dep_time := rec.dep_time;
+    --     arr_time := rec.arr_time;
+    --     path_seq := 0;
+    --     RETURN NEXT;
+    -- END LOOP;
     RETURN;
 END;
 $BODY$ 
