@@ -114,7 +114,7 @@ BEGIN
             LOOP
                 IF deps[new_stop].arr_time + rec.dur < deps[rec.e_id].arr_time THEN
                     --dep_times[rec.p_st_ary[seq]] := rec.time_series[seq * 2 - 1];
-                    deps[rec.e_id] := create_trip(-2, new_stop, rec.e_id, deps[rec.f_id].arr_time, CAST(deps[rec.f_id].arr_time + rec.dur as INTEGER), CAST(k  as DOUBLE PRECISION) + 0.5);
+                    deps[rec.e_id] := create_trip(-2, new_stop, rec.e_id, deps[rec.f_id].arr_time, CAST(deps[rec.f_id].arr_time + rec.dur as INTEGER), CAST(k as DOUBLE PRECISION) + 0.5);
                     marked_stop_t := array_remove(marked_stop_t, rec.e_id);
                     marked_stop_t := array_append(marked_stop_t, rec.e_id);
                 END IF;
@@ -136,7 +136,7 @@ BEGIN
         --     EXIT;
         -- END IF;
     END LOOP;
-
+    seq := 0;
     new_stop := end_station_id;
     WHILE new_stop != start_station_id 
     LOOP
@@ -146,8 +146,9 @@ BEGIN
         arr_st := deps[new_stop].arr_st;
         dep_time := deps[new_stop].dep_time;
         arr_time := deps[new_stop].arr_time;
-        path_seq := deps[new_stop].k;
+        path_seq := seq;
         new_stop := deps[new_stop].dep_st;
+        seq := seq + 1;
         RETURN NEXT;
     END LOOP;
     route_desc_id := deps[new_stop].route_desc_id;
@@ -156,7 +157,7 @@ BEGIN
     arr_st := deps[new_stop].arr_st;
     dep_time := deps[new_stop].dep_time;
     arr_time := deps[new_stop].arr_time;
-    path_seq := deps[new_stop].k;
+    path_seq := seq;
     new_stop := deps[new_stop].dep_st;
     -- FOREACH rec IN ARRAY deps
     -- LOOP
