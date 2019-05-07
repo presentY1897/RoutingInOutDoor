@@ -47,10 +47,11 @@ BEGIN
                     WHERE ST_Distance('
                     || node.geom
                     || ' , st.geom) < 700';
-                    
+
         EXECUTE find_nearest_station_sql INTO rec_s;
     END LOOP;
 
+    -- 
 
     RETURN;
 END;
