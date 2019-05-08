@@ -78,6 +78,19 @@
 | e_id(fk) | integer | p_st의 pseudo_id를 외래키로 참조 |
 | dist | double precision | 두 정류장의 거리 |
 
+#### 7. route_link
+
+정류장 간의 링크
+
+|Name|type|description|
+|--|--|--|
+| link_id | integer | 링크 id |
+| route_id(fk) | numeric | 노선 id route의 route_id를 외래키로 참조 |
+| f_id(fk) | integer | p_st의 pseudo_id를 외래키로 참조 |
+| e_id(fk) | integer | p_st의 pseudo_id를 외래키로 참조 |
+| seq | integer | 순번 |
+| geom | geometry | 링크의 형상 정보 |
+
 ### Car Table
 
 ITS 노드 링크 데이터에서 가져온 도로망
