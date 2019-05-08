@@ -26,7 +26,7 @@ BEGIN
             last_time := t;
             time_series := '{}';
 
-            FOR st_rec IN SELECT rs.dist, section_spd / 3.6 as sect_spd, rs.seq FROM public.route_st rs WHERE rs.route_desc_id = rec.route_desc_id ORDER BY rs.seq
+            FOR st_rec IN SELECT rs.dist, CAST(section_spd / 3.6 as DOUBLE PRECISION) as sect_spd, rs.seq FROM public.route_st rs WHERE rs.route_desc_id = rec.route_desc_id ORDER BY rs.seq
             LOOP
                 sect_dur := 0;
                 IF st_rec.seq = 1 THEN
