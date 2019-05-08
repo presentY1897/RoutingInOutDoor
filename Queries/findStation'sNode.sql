@@ -19,24 +19,3 @@ FROM public."BUS_STATION" AS ST
 JOIN (SELECT DISTINCT "busRouteId", "trnstnid" FROM public."BUS_STATION") TRST
 ON ST."busRouteId" = TRST."busRouteId" AND ST."stationid" = TRST."trnstnid"
 ORDER BY ST."busRouteId"
-
--- function
--- drop pg_nearestId
-CREATE OR REPLACE FUNCTION pg_nearestId(
-                IN nodetbl varchar,
-                IN routeid numeric,
-                IN stgeom geometry
-        )
-        RETURNS integer AS
-$BODY$
-BEGIN
-        -- Find nearest node
-        EXECUTE 'SELECT "seq"::integer AS id FROM '
-                        || quote_ident(nodetbl) || 
-                        ' WHERE Route_Id = ' || routeid ||
-                        ' ORDER BY geom <-> '
-                        || stgeom || 'LIMIT 2' into rec;
-        RETURN rec.id;
-END;
-$BODY$
-LANGUAGE 'plpgsql' VOLATILE STRICT;
