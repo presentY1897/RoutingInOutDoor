@@ -18,14 +18,14 @@
 | term | integer | 노선 배차 간격 (min) |
 | start_time | integer | 노선 배차 시작 시간 (sec) |
 | end_time | integer | 노선 배차 종료 시간 (sec) |
-| p_st_ary(fk) | integer[] | 노선이 지나가는 정류장 배열(p_st의 pseudo_id를 외래키로 참조 )|
+| p_st_ary | integer[] | 노선이 지나가는 정류장 배열(p_st의 pseudo_id를 외래키로 참조 )|
 | geom | geometry | 노선 전체 형상 (srid:4326) |
 | geom_up | geometry | 노선 상행선 형상 (srid:4326) |
 | geom_down | geometry | 노선 하행성 형상 (srid:4326) |
 
 #### 2. route_st
 
-노선 번호를 구성하는 정류장.
+노선을 구성하는 정류장.
 
 |Name|type|description|
 |--|--|--|
@@ -67,7 +67,7 @@
 | pseudo_id | integer | 임의로 부여한 id |
 | geom | geometry | 정류장의 점좌표 (srid:4326) |
 
-#### 6. p_st
+#### 6. station_transfer
 
 도보로 환승가능한 정류장 링크.
 거리가 700m이하인 정류장들을 묶음.
