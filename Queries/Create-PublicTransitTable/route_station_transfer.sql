@@ -1,7 +1,6 @@
 -- Table: public.station_transfer
 
 -- DROP TABLE public.station_transfer;
-
 CREATE TABLE public.station_transfer
 (
     f_id integer,
@@ -10,12 +9,10 @@ CREATE TABLE public.station_transfer
 )
 WITH (
     OIDS = FALSE
-)
-TABLESPACE pg_default;
+);
 
 ALTER TABLE public.station_transfer
     OWNER to postgres;
-
 
 -- INSERT
 INSERT INTO public.station_transfer(

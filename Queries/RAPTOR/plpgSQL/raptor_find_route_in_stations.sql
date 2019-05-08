@@ -55,10 +55,10 @@ BEGIN
     LOOP
         FOREACH new_stop IN ARRAY marked_stop
         LOOP
-            rec_sql := 'SELECT DISTINCT ON (route_id) route_id, route_seq, dept_time, pseudo_id, station_seq
+            rec_sql := 'SELECT DISTINCT ON (route_id) route_id, route_seq, dep_time, pseudo_id, station_seq
                     FROM public.route_station_time
                     WHERE pseudo_id = '
-                    || new_stop || ' AND dept_time > ' || deps[new_stop].arr_time
+                    || new_stop || ' AND dep_time > ' || deps[new_stop].arr_time
                     || ' ORDER BY route_id, route_seq';
             FOR rec IN EXECUTE rec_sql
             LOOP
@@ -69,7 +69,7 @@ BEGIN
                        -- Q := array_append(Q, create_tripQ(rec.route_id, rec.route_seq, rec.dept_time, rec.pseudo_id, rec.station_seq));
                     -- END IF;
                 ELSE
-                    Q := array_append(Q, create_tripQ(rec.route_id, rec.route_seq, rec.dept_time, rec.pseudo_id, rec.station_seq));
+                    Q := array_append(Q, create_tripQ(rec.route_id, rec.route_seq, rec.dep_time, rec.pseudo_id, rec.station_seq));
                 END IF;
             END LOOP;
         END LOOP;
@@ -78,7 +78,7 @@ BEGIN
         LOOP
             rec_sql := 'SELECT rt.route_id, rt.time_series as times, rd.p_st_ary as stations, array_length(p_st_ary, 1) as maxseq
                     FROM public.route_time rt
-                    JOIN public.route_desc rd
+                    JOIN public.route rd
                     ON rt.route_id = rd.route_id
                     WHERE rt.route_id = '
                     || recs.route_id || ' AND rt.seq > ' || recs.route_seq;
@@ -89,7 +89,7 @@ BEGIN
                 FOR seq IN seq..rec.maxseq - 1
                 LOOP
                     IF rec.times[seq * 2] < deps[rec.stations[seq]].arr_time AND rec.times[seq * 2] > rec.times[seq * 2 - 1] THEN
-                        deps[rec.stations[seq]] := create_trip(rec.route_id, rec.stations[recs.station_seq], rec.stations[seq], recs.dept_time, rec.times[seq * 2], CAST(k AS DOUBLE PRECISION));
+                        deps[rec.stations[seq]] := create_trip(rec.route_id, rec.stations[recs.station_seq], rec.stations[seq], recs.dep_time, rec.times[seq * 2], CAST(k AS DOUBLE PRECISION));
                         marked_stop := array_remove(marked_stop, rec.stations[seq]);
                         marked_stop := array_append(marked_stop, rec.stations[seq]);
                     END IF;

@@ -89,7 +89,7 @@
 | f_id(fk) | integer | p_st의 pseudo_id를 외래키로 참조 |
 | e_id(fk) | integer | p_st의 pseudo_id를 외래키로 참조 |
 | seq | integer | 순번 |
-| geom | geometry | 링크의 형상 정보 |
+| geom | geometry | 링크의 형상 정보 | 
 
 ### Car Table
 
