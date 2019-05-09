@@ -324,13 +324,13 @@ CREATE INDEX route_st_seq
 
 CREATE INDEX route_station_time_idx
     ON public.route_station_time USING btree
-    (route_id ASC NULLS LAST, pseudo_id ASC NULLS LAST, dep_time ASC NULLS LAST)
+    (pseudo_id ASC NULLS LAST, dep_time ASC NULLS LAST)
     TABLESPACE pg_default;
 CREATE INDEX total_idx
     ON public.route_station_time USING btree
     (route_id ASC NULLS LAST, route_seq ASC NULLS LAST, dep_time ASC NULLS LAST, pseudo_id ASC NULLS LAST, station_seq ASC NULLS LAST)
     TABLESPACE pg_default;
-    
+
 CREATE INDEX route_time_idx
     ON public.route_time USING btree
     (route_id ASC NULLS LAST, seq ASC NULLS LAST)
