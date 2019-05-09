@@ -282,3 +282,75 @@ INSERT INTO public.building_link(
 	FROM public.jeju_link;') AS outdoor (building_id INTEGER, gid INTEGER, type INTEGER, floor DOUBLE PRECISION, source INTEGER, target INTEGER, length DOUBLE PRECISION, geom GEOMETRY);
     
     
+-------------------------------------------------------------
+-- create index
+-------------------------------------------------------------
+-- primary key
+ALTER TABLE public.route
+    ADD CONSTRAINT route_pkey PRIMARY KEY (route_id)
+;
+ALTER TABLE public.p_st
+    ADD CONSTRAINT p_st_pkey PRIMARY KEY (pseudo_id)
+;
+ALTER TABLE public.route_link
+    ADD CONSTRAINT route_link_pkey PRIMARY KEY (link_id)
+;
+
+ALTER TABLE public.its_node
+    ADD CONSTRAINT its_node_pkey PRIMARY KEY (gid)
+;
+ALTER TABLE public.its_link
+    ADD CONSTRAINT its_link_pkey PRIMARY KEY (gid)
+;
+
+ALTER TABLE public.building
+    ADD CONSTRAINT builidng_pkey PRIMARY KEY (building_id)
+;
+
+-- index
+CREATE INDEX route_pst_pkey
+    ON public.route USING btree
+    (p_st_ary ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+CREATE INDEX route_st_idx
+    ON public.route_st USING btree
+    (route_id ASC NULLS LAST, station_id ASC NULLS LAST)
+    TABLESPACE pg_default;
+CREATE INDEX route_st_seq
+    ON public.route_st USING btree
+    (route_id ASC NULLS LAST, seq ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+CREATE INDEX route_station_time_idx
+    ON public.route_station_time USING btree
+    (route_id ASC NULLS LAST, pseudo_id ASC NULLS LAST, dep_time ASC NULLS LAST)
+    TABLESPACE pg_default;
+CREATE INDEX total_idx
+    ON public.route_station_time USING btree
+    (route_id ASC NULLS LAST, route_seq ASC NULLS LAST, dep_time ASC NULLS LAST, pseudo_id ASC NULLS LAST, station_seq ASC NULLS LAST)
+    TABLESPACE pg_default;
+    
+CREATE INDEX route_time_idx
+    ON public.route_time USING btree
+    (route_id ASC NULLS LAST, seq ASC NULLS LAST)
+    TABLESPACE pg_default;
+CREATE INDEX time_series_idx
+    ON public.route_time USING btree
+    (time_series ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+CREATE INDEX p_st_idx
+    ON public.p_st USING btree
+    (station_id ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+CREATE INDEX station_transfer_idx
+    ON public.station_transfer USING btree
+    (f_id ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+CREATE INDEX route_link_idx
+    ON public.route_link USING btree
+    (route_id ASC NULLS LAST)
+    TABLESPACE pg_default;
