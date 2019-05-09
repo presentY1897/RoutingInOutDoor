@@ -1,4 +1,4 @@
---DROP FUNCTION raptor_find_route_in_stations;
+--DROP FUNCTION raptor_find_route_in_stations(INTEGER, INTEGER, INTEGER[]);
 
 CREATE OR REPLACE FUNCTION raptor_find_route_in_stations(
     IN start_station_id INTEGER,
@@ -28,7 +28,7 @@ DECLARE
 BEGIN
     marked_stop_t := '{}';
     marked_stop := '{}';
-    Q := '{}';
+    Q := '{}'; 
     marked_stop := array_append(marked_stop, CAST(start_station_id AS INTEGER)); -- 시작 정류장 마킹
     -- 도착 시간 초기화
     deps := array_fill(create_trip(-1, -1, -1, -1, 900000, 0), ARRAY[20000]);
@@ -51,7 +51,7 @@ BEGIN
     marked_stop := marked_stop_t;
 
     k := 1;
-    FOR k in 1..3 -- k 반복
+    FOR k in 1..2 -- k 반복
     LOOP
         FOREACH new_stop IN ARRAY marked_stop
         LOOP

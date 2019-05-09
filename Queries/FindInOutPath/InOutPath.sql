@@ -20,7 +20,6 @@ DECLARE
     rec_t RECORD;
     rec_s RECORD;
     rec_r RECORD;
-    seq INTEGER;
 BEGIN
     exteriors := '{}';
     FOR rec IN SELECT nd.node_id, pgr_dijkstra('
@@ -55,12 +54,33 @@ BEGIN
                     ON rdd.route_id = R.route_id AND rdd.station_id = DP.station_id
                     LEFT JOIN route_st rda
                     ON rda.route_id = R.route_id AND rda.station_id = AP.station_id
+                ORDER BY R.path_seq DESC
     LOOP
         -- Return record
         seq     := seq + 1;
-        geom    := rec.geom;
+        geom    := rec_r.geom;
         RETURN NEXT;
     END LOOP;
+    -- ped route
+    seq := seq + 1;
+    geom := ST_MakeLine((SELECT bn.geom FROM building_node bn WHERE node_id = ANY(exteriors) ORDER BY ST_Distance(bn.geom, ST_EndPoint(rec_r.geom)) LIMIT 1), 
+    ST_EndPoint(rec_r.geom));
+    RETURN NEXT;
+    -- indoor route
+    seq := seq + 1;
+    geom := (SELECT ST_MakeLine(ARRAY(SELECT bn.geom
+    FROM pgr_dijkstra('SELECT link_id::integer AS id,
+                         source::integer,
+                         target::integer,
+                         dist::double precision AS cost
+                        FROM building_link',
+                CAST(end_node_id AS INTEGER) , 
+                (SELECT ex.node_id FROM (SELECT bn.geom, node_id FROM building_node bn WHERE node_id = ANY(exteriors)) ex ORDER BY ST_Distance(ex.geom, ST_EndPoint(rec_r.geom)) LIMIT 1)
+                , false, false) di
+    JOIN building_node bn
+    ON di.id1 = bn.node_id)));
+
+    RETURN NEXT;
     RETURN;
 END;
 $BODY$ 
