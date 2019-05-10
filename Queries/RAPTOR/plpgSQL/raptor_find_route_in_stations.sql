@@ -51,40 +51,34 @@ BEGIN
     marked_stop := marked_stop_t;
 
     k := 1;
-    FOR k in 1..2 -- k 반복
+    FOR k in 1..3 -- k 반복
     LOOP
-        FOREACH new_stop IN ARRAY marked_stop
+        FOR rec IN (SELECT DISTINCT ON (rt.route_id) rt.route_id, rt.route_seq, rt.dep_time, rt.pseudo_id, rt.station_seq
+                FROM public.route_station_time rt
+                WHERE pseudo_id = ANY(marked_stop) AND rt.dep_time > deps[new_stop].arr_time
+                ORDER BY rt.route_id, rt.route_seq)
         LOOP
-            rec_sql := 'SELECT DISTINCT ON (route_id) route_id, route_seq, dep_time, pseudo_id, station_seq
-                    FROM public.route_station_time
-                    WHERE pseudo_id = '
-                    || new_stop || ' AND dep_time > ' || deps[new_stop].arr_time
-                    || ' ORDER BY route_id, route_seq';
-            FOR rec IN EXECUTE rec_sql
-            LOOP
-                SELECT * FROM UNNEST(Q) AS t WHERE t.route_id = rec.route_id INTO recs;
-                IF recs IS NOT NULL THEN
-                    -- IF (SELECT station_seq FROM UNNEST(Q) as t WHERE t.route_id = rec.route_id) > rec.station_seq THEN
-                       -- Q := array_remove(Q, create_tripQ(recs.route_id, recs.route_seq, recs.dept_time, recs.pseudo_id, recs.station_seq));
-                       -- Q := array_append(Q, create_tripQ(rec.route_id, rec.route_seq, rec.dept_time, rec.pseudo_id, rec.station_seq));
-                    -- END IF;
-                ELSE
-                    Q := array_append(Q, create_tripQ(rec.route_id, rec.route_seq, rec.dep_time, rec.pseudo_id, rec.station_seq));
+            SELECT * FROM UNNEST(Q) AS t WHERE t.route_id = rec.route_id INTO recs;
+            IF recs IS NOT NULL THEN
+                IF (SELECT station_seq FROM UNNEST(Q) as t WHERE t.route_id = rec.route_id) > rec.station_seq THEN
+                    Q := array_remove(Q, create_tripQ(recs.route_id, recs.route_seq, recs.dept_time, recs.pseudo_id, recs.station_seq));
+                    Q := array_append(Q, create_tripQ(rec.route_id, rec.route_seq, rec.dept_time, rec.pseudo_id, rec.station_seq));
                 END IF;
-            END LOOP;
+            ELSE
+                Q := array_append(Q, create_tripQ(rec.route_id, rec.route_seq, rec.dep_time, rec.pseudo_id, rec.station_seq));
+            END IF;
         END LOOP;
 
         FOREACH recs IN ARRAY Q
         LOOP
-            rec_sql := 'SELECT rt.route_id, rt.time_series as times, rd.p_st_ary as stations, array_length(p_st_ary, 1) as maxseq
+            seq := recs.station_seq + 1;
+            
+            FOR rec IN (SELECT rt.route_id, rt.time_series as times, rd.p_st_ary as stations, array_length(rd.p_st_ary, 1) as maxseq
                     FROM public.route_time rt
                     JOIN public.route rd
                     ON rt.route_id = rd.route_id
-                    WHERE rt.route_id = '
-                    || recs.route_id || ' AND rt.seq > ' || recs.route_seq;
-            seq := recs.station_seq + 1;
-            
-            FOR rec IN EXECUTE rec_sql
+                    WHERE rt.route_id = 
+                    recs.route_id AND rt.seq > recs.route_seq)
             LOOP
                 FOR seq IN seq..rec.maxseq - 1
                 LOOP
@@ -101,9 +95,7 @@ BEGIN
 
         FOREACH new_stop IN ARRAY marked_stop
         LOOP
-            rec_sql := 'SELECT f_id, e_id, dist / 1.2 as dur FROM public.station_transfer WHERE f_id = '
-                    || new_stop;
-            FOR rec IN EXECUTE rec_sql
+            FOR rec IN (SELECT st.f_id, st.e_id, st.dist / 1.2 as dur FROM public.station_transfer st WHERE st.f_id = new_stop)
             LOOP
                 IF deps[new_stop].arr_time + rec.dur < deps[rec.e_id].arr_time THEN
                     deps[rec.e_id] := create_trip(-2, new_stop, rec.e_id, deps[rec.f_id].arr_time, CAST(deps[rec.f_id].arr_time + rec.dur AS INTEGER), CAST(k AS DOUBLE PRECISION) + 0.5);
