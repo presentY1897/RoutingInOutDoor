@@ -354,3 +354,19 @@ CREATE INDEX route_link_idx
     ON public.route_link USING btree
     (route_id ASC NULLS LAST)
     TABLESPACE pg_default;
+
+CREATE INDEX building_id_idx
+    ON public.building_link USING btree
+    (building_id ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+
+CREATE INDEX building_node_geom_idx
+    ON public.building_node USING gist
+    (geom)
+    TABLESPACE pg_default;
+
+CREATE INDEX its_node_geom_idx
+    ON public.its_node USING gist
+    (geom)
+    TABLESPACE pg_default;

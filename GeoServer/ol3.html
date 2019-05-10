@@ -34,7 +34,7 @@
         });
 
         var params = {
-            LAYERS: 'pgraptor:pgraptor',
+            LAYERS: 'inoutrouting:inoutrouting',
             'TILED': true,
             FROMAT: 'image/png'
         };
@@ -63,15 +63,14 @@
                 var startCoord = transform(startPoint.getPosition());
                 var finalCoord = transform(finalPoint.getPosition());
                 var viewparams = [
-                'x1:' + startCoord[0], 'y1:' + startCoord[1],
-                'x2:' + finalCoord[0], 'y2:' + finalCoord[1]
+                'x1:' + startCoord[0], 'y1:' + startCoord[1], 'id:' + 70
                 ];
                 params.viewparams = viewparams.join(';');
 
                 // we now have the two points, create the result layer and add it to the map
                 result = new ol.layer.Image({
                 source: new ol.source.ImageWMS({
-                    url: 'http://localhost:8080/geoserver/pgraptor/wms',
+                    url: 'http://localhost:8080/geoserver/inoutrouting/wms',
                     params: params,
                     serverType: 'geoserver'
                 })
