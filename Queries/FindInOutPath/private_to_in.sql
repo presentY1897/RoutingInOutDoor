@@ -20,7 +20,7 @@ BEGIN
     SELECT ind.geom AS ingeom, pnd.geom AS pgeom, rp.path AS prvgeom
         FROM find_indoor_exteriors(building_id, node_id) ind,   -- INDOOR PATH
         find_nearest_nodes(building_id, ind.exit_id, 700) pnd,  -- PEDESTRIAN PATH
-        car_dijkstra(rec.gid, pnd.n_id) rp                          -- PRIVATE CAR PATH
+        car_dijkstra(rec.gid, pnd.n_id) rp                          -- PRIVATE CAR PATH -- 병목지점
         ORDER BY rp.dist + pnd.dist + ind.dist
         LIMIT 1 INTO rec;
 
