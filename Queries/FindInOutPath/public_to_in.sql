@@ -16,7 +16,7 @@ DECLARE
     rec RECORD;
 BEGIN
     SELECT it.pseudo_id FROM p_st it ORDER BY ST_Distance(it.geom, ST_SetSRID(ST_MakePoint(x, y), 4326)) LIMIT 1 INTO rec; 
-    SELECT rp.path, rp.dist as dist
+    SELECT rp.path, rp.dist as dist, rp.arr_st_id
     FROM public_dijkstra(
             rec.pseudo_id, 
             50000,
@@ -30,6 +30,7 @@ BEGIN
     SELECT ind.geom AS ingeom, pnd.geom AS pgeom, rec.path AS prvgeom
         FROM find_indoor_exteriors(building_id, node_id) ind,   -- INDOOR PATH
         find_nearest_stations(building_id, ind.exit_id, dist_rad) pnd  -- PEDESTRIAN PATH      
+        WHERE pnd.station_id = rec.arr_st_id
         ORDER BY pnd.dist + rec.dist + ind.dist
         LIMIT 1 INTO rec;
 
