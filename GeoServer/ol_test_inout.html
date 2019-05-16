@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ol3 pgRouting client</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/css/ol.css" type="text/css">
+    <style>
+      #cont {
+        width: 100%;
+        height: 95%;
+      }
+    </style>
+    <script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
+  </head>
+  <body>
+      <div id="cont">
+        <div id="ol-map">
+            <div id="start-point">start</div>
+        </div>
+        <div id="select">
+            <div id="pos">
+                pos x: 
+                <input type="text" name="pos-x">
+                y: 
+                <input type="text" name="pos-y">
+            </div>
+            <div id="building">
+                building id: 
+                <input type="number" name="building_id">
+                room id: 
+                <input type="number" name="node_id">
+            </div>
+            <button id="findbtn" onclick="findRoute()">find</button>
+        </div>
+    </div>
+
+    <script>
+        var map = new ol.Map({
+            target: 'ol-map',
+            layers: [
+            new ol.layer.Tile({
+                source: new ol.source.OSM()
+            })
+            ],
+            view: new ol.View({
+            center: [14134888.1446, 4517672.9700],
+            zoom: 10
+            })
+        });
+
+        var params = {
+            LAYERS: 'inoutrouting:inoutrouting',
+            'TILED': true,
+            FROMAT: 'image/png'
+        };
+        var startPoint = new ol.Overlay({
+            map: map,
+            element: document.getElementById('start-point')
+        });
+        
+
+        var transform = ol.proj.getTransform('EPSG:3857', 'EPSG:4326');
+
+        function changePositionInput() {
+            var startCoord = transform(startPoint.getPosition());
+            document.getElementsByName("pos-x").value = startCoord[0];
+            document.getElementsByName("pos-y").value = startCoord[1];
+        }; 
+        
+        map.on('click', function(event) {
+            var coordinate = event.coordinate;
+            startPoint.setPosition(coordinate);
+            changePositionInput();
+        });
+
+        function findRoute() {
+            // into the server projection (EPSG:4326)
+            var startCoord = transform(startPoint.getPosition());
+            var viewparams = [
+            'x1:' + startCoord[0], 'y1:' + startCoord[1], 'id:' + 70
+            ];
+            params.viewparams = viewparams.join(';');
+
+            // we now have the two points, create the result layer and add it to the map
+            result = new ol.layer.Image({
+            source: new ol.source.ImageWMS({
+                url: 'http://localhost:8080/geoserver/inoutrouting/wms',
+                params: params,
+                serverType: 'geoserver'
+            })
+            });
+            map.addLayer(result);
+        };
+    </script>
+  </body>
+</html>
