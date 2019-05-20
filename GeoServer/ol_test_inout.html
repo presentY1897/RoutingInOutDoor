@@ -5,49 +5,83 @@
     <meta charset="utf-8">
     <link rel="stylesheet" href="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/css/ol.css" type="text/css">
     <style>
-      #cont {
+      #ol-map {
         width: 100%;
-        height: 95%;
+        height: 600px;
       }
     </style>
     <script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
   </head>
   <body>
       <div id="cont">
         <div id="ol-map">
             <div id="start-point">start</div>
         </div>
-        <div id="select">
+        <form id="select">
             <div id="pos">
                 pos x: 
-                <input type="text" name="pos-x">
+                <input type="number" id="pos-x">
                 y: 
-                <input type="text" name="pos-y">
+                <input type="number" id="pos-y">
             </div>
             <div id="building">
                 building id: 
-                <input type="number" name="building_id">
+                <input type="number" id="building_id" value = "1">
+                floor:
+                <input type="number" id="building_floor" value = "0">
                 room id: 
-                <input type="number" name="node_id">
+                <input type="number" id="node_id" value = "70">
             </div>
             <button id="findbtn" onclick="findRoute()">find</button>
-        </div>
+        </form>
     </div>
 
     <script>
+
+        var vectorSource = new ol.source.Vector({
+            format: new ol.format.GeoJSON(),
+            url: function(extent) {
+                var strUrl = 'http://localhost:8080/geoserver/inoutrouting/building_node/wfs?service=WFS&' +
+                'version=1.1.0&request=GetFeature&typename=inoutrouting:building_node&' +
+                'outputFormat=application/json&srsname=EPSG:3857&' +
+                'bbox=' + extent.join(',') + ',EPSG:3857';
+ 
+                var tag = document.createElement("script"); 
+                tag.src = strUrl; 
+                document.getElementsByTagName("head")[0].appendChild(tag);
+                return strUrl;
+            },
+            strategy: ol.loadingstrategy.bbox
+        });
+
+        var vector = new ol.layer.Vector({
+            source: vectorSource,
+            style: new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: 'rgba(255, 255, 0, 1.0)',
+                    width: 4
+                }),
+                fill: new ol.style.Fill({
+                    color: 'rgba(255,0,0,0.4)'
+                })
+            })
+        });
+
         var map = new ol.Map({
             target: 'ol-map',
             layers: [
             new ol.layer.Tile({
                 source: new ol.source.OSM()
-            })
+            }),
+            vector
             ],
             view: new ol.View({
             center: [14134888.1446, 4517672.9700],
             zoom: 10
             })
         });
-
+        
         var params = {
             LAYERS: 'inoutrouting:inoutrouting',
             'TILED': true,
@@ -60,24 +94,24 @@
         
 
         var transform = ol.proj.getTransform('EPSG:3857', 'EPSG:4326');
-
-        function changePositionInput() {
-            var startCoord = transform(startPoint.getPosition());
-            document.getElementsByName("pos-x").value = startCoord[0];
-            document.getElementsByName("pos-y").value = startCoord[1];
-        }; 
         
         map.on('click', function(event) {
             var coordinate = event.coordinate;
             startPoint.setPosition(coordinate);
-            changePositionInput();
+            changePositionInput(); 
         });
+
+        function changePositionInput() {
+            var startCoord = transform(startPoint.getPosition());
+            document.getElementById("pos-x").value = startCoord[0];
+            document.getElementById("pos-y").value = startCoord[1];
+        }; 
 
         function findRoute() {
             // into the server projection (EPSG:4326)
             var startCoord = transform(startPoint.getPosition());
             var viewparams = [
-            'x1:' + startCoord[0], 'y1:' + startCoord[1], 'id:' + 70
+            'x1:' + startCoord[0], 'y1:' + startCoord[1], 'id:' + document.getElementById("node_id").value
             ];
             params.viewparams = viewparams.join(';');
 
