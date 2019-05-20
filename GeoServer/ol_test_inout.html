@@ -7,7 +7,7 @@
     <style>
       #ol-map {
         width: 100%;
-        height: 600px;
+        height: 900px;
       }
     </style>
     <script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
@@ -19,6 +19,12 @@
             <div id="start-point">start</div>
         </div>
         <form id="select">
+            <div id="type">
+                <select id="typeList" onchange="selectType()">
+                    <option>car</option>
+                    <option>bus</option>
+                </select>
+            </div>
             <div id="pos">
                 pos x: 
                 <input type="number" id="pos-x">
@@ -38,6 +44,9 @@
     </div>
 
     <script>
+        var searchOption = 1;
+
+        var point;
 
         var vectorSource = new ol.source.Vector({
             format: new ol.format.GeoJSON(),
@@ -107,11 +116,18 @@
             document.getElementById("pos-y").value = startCoord[1];
         }; 
 
+        function selectType() {
+            var optionList = document.getElementById("typeList");
+            searchOption = optionList.selectedIndex + 1;
+        };
+
         function findRoute() {
             // into the server projection (EPSG:4326)
             var startCoord = transform(startPoint.getPosition());
             var viewparams = [
-            'x1:' + startCoord[0], 'y1:' + startCoord[1], 'id:' + document.getElementById("node_id").value
+            'x1:' + startCoord[0], 'y1:' + startCoord[1], 
+            'id:' + document.getElementById("node_id").value,
+            'searchType:' + searchOption
             ];
             params.viewparams = viewparams.join(';');
 

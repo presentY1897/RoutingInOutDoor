@@ -13,12 +13,13 @@ CREATE OR REPLACE FUNCTION public_to_in(
 RETURNS SETOF RECORD AS
 $BODY$
 DECLARE
+    fpoint RECORD;
     rec RECORD;
 BEGIN
-    SELECT it.pseudo_id FROM p_st it ORDER BY ST_Distance(it.geom, ST_SetSRID(ST_MakePoint(x, y), 4326)) LIMIT 1 INTO rec; 
+    SELECT it.pseudo_id, ST_SetSRID(ST_MakePoint(x, y), 4326) as geom FROM p_st it ORDER BY ST_Distance(it.geom, ST_SetSRID(ST_MakePoint(x, y), 4326)) LIMIT 1 INTO fpoint; 
     SELECT rp.path, rp.dist as dist, rp.arr_st_id
     FROM public_dijkstra(
-            rec.pseudo_id, 
+            fpoint.pseudo_id, 
             50000,
             ARRAY(SELECT DISTINCT pnd.station_id
                 FROM find_indoor_exteriors(building_id, node_id) ind,
@@ -35,14 +36,18 @@ BEGIN
         LIMIT 1 INTO rec;
 
     seq         := 0;
+    trip_type   := 0;
+    geom        := ST_MakeLine(fpoint.geom, ST_StartPoint(rec.prvgeom));
+    RETURN NEXT;
+    seq         := 1;
     trip_type   := 2;
     geom        := rec.prvgeom;
     RETURN NEXT;
-    seq         := 1;
+    seq         := 2;
     trip_type   := -2;
     geom        := rec.pgeom;
     RETURN NEXT;
-    seq         := 2;
+    seq         := 3;
     trip_type   := 0;
     geom        := rec.ingeom;
     RETURN NEXT;
