@@ -26,7 +26,7 @@ BEGIN
         LIMIT 1 INTO rec;
 
     seq         := 0;
-    trip_type   := 0;
+    trip_type   := 1;
     geom        := ST_MakeLine(fpoint.geom, ST_StartPoint(rec.prvgeom));
     RETURN NEXT;
     seq         := 1;
